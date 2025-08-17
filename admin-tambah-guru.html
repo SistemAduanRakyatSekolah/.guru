@@ -316,6 +316,11 @@
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Daftar Guru';
+                // Log keluar secara automatik SELEPAS semua proses selesai.
+                // Ini membersihkan sesi supaya admin boleh mendaftar guru lain
+                // tanpa perlu memuat semula halaman.
+                // Ini adalah langkah penting untuk membetulkan ralat pendaftaran.
+                firebase.auth().signOut();
             }
         });
 
