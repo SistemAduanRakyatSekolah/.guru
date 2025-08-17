@@ -290,9 +290,6 @@
                     });
                 }
 
-                // Log keluar admin secara automatik untuk mengelakkan konflik sesi
-                await firebase.auth().signOut();
-
                 alert(`Akaun guru "${name}" telah berjaya dicipta.`);
                 
                 document.getElementById('addTeacherForm').reset(); // Kosongkan borang
