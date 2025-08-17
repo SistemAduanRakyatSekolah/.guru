@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papan Pemuka Guru - SARS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --header-bg: #004d40;
+            --card-bg: #ffffff;
+            --primary-text: #263238;
+            --secondary-text: #546e7a;
+            --accent-color: #00796b;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --border-color: #e0e0e0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            color: var(--primary-text);
+        }
+        .header {
+            background-color: var(--header-bg);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header-info p {
+            margin: 0;
+            text-align: right;
+        }
+        #logoutBtn {
+            background-color: #c62828;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            margin-top: 5px;
+        }
+        #logoutBtn:hover {
+            background-color: #b71c1c;
+        }
+        .main-container {
+            padding: 30px 40px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+        .tab-button {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--secondary-text);
+            position: relative;
+            transition: color 0.3s;
+        }
+        .tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--accent-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease-in-out;
+        }
+        .tab-button.active {
+            color: var(--accent-color);
+        }
+        .tab-button.active::after {
+            transform: scaleX(1);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .item-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            transition: box-shadow 0.3s ease;
+        }
+        .item-card:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        /* Warna Status untuk Jalur Kiri */
+        .status-baru, .status-pending {
+            border-left-color: #ff9800; /* Oren */
+        }
+        .status-siasatan, .status-diterima {
+            border-left-color: #2196f3; /* Biru */
+        }
+        .status-selesai {
+            border-left-color: #4caf50; /* Hijau */
+        }
+        .status-ditolak {
+            border-left-color: #f44336; /* Merah */
+        }
+        .item-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: var(--primary-text);
+        }
+        .item-card p {
+            margin: 5px 0;
+            color: var(--secondary-text);
+            line-height: 1.6;
+        }
+        .item-card .meta {
+            font-size: 14px;
+            color: #78909c;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .item-card .meta strong {
+            color: var(--primary-text);
+        }
+        .item-card a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .item-card a:hover {
+            text-decoration: underline;
+        }
+        .loading, .no-data {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: var(--secondary-text);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div>
+            <h1>Portal Guru SARS</h1>
+        </div>
+        <div class="header-info">
+            <p id="guru-name">Memuatkan...</p>
+            <p id="guru-school" style="font-size: 14px;">...</p>
+            <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Keluar</button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="aduan">Aduan Pelajar</button>
+            <button class="tab-button" data-tab="cadangan">Cadangan & Idea</button>
+            <button class="tab-button" data-tab="temujanji">Permohonan Temujanji</button>
+        </nav>
+
+        <div id="aduan" class="tab-content active">
+            <h2>Senarai Aduan</h2>
+            <div id="aduan-list" class="item-list">
+                <p class="loading">Memuatkan data aduan...</p>
+            </div>
+        </div>
+
+        <div id="cadangan" class="tab-content">
+            <h2>Senarai Cadangan</h2>
+            <div id="cadangan-list" class="item-list">
+                <p class="loading">Memuatkan data cadangan...</p>
+            </div>
+        </div>
+
+        <div id="temujanji" class="tab-content">
+            <h2>Senarai Permohonan Temujanji</h2>
+            <div id="temujanji-list" class="item-list">
+                <p class="loading">Memuatkan data temujanji...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <!-- Skrip Konfigurasi Berpusat -->
+    <script src="assets/js/auth.js"></script>
+
+    <script>
+        // Fungsi untuk memaparkan data
+        function displayItems(listElement, items, type) {
+            listElement.innerHTML = ''; // Kosongkan mesej 'loading'
+            if (items.length === 0) {
+                listElement.innerHTML = `<p class="no-data">Tiada ${type} ditemui buat masa ini.</p>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const data = item.data();
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                // Tambah kelas status untuk warna jalur kiri
+                if (data.status) {
+                    card.classList.add(`status-${data.status.toLowerCase().replace(' ', '-')}`);
+                }
+                
+                let content = '';
+                const submissionDate = new Date(data.createdAt).toLocaleString('ms-MY');
+
+                if (type === 'aduan') {
+                    content = `
+                        <h3>Aduan: <strong style="color: var(--primary-text);">${data.status}</strong></h3>
+                        <p>${data.description}</p>
+                        ${data.imageUrl ? `<p><a href="${data.imageUrl}" target="_blank">Lihat Gambar Bukti</a></p>` : ''}
+                        ${data.voiceNoteUrl ? `<p><a href="${data.voiceNoteUrl}" target="_blank">Dengar Rakaman Suara</a></p>` : ''}
+                        <div class="meta">
+                            <span>Oleh: <strong>${data.studentName}</strong></span>
+                            <span>Tarikh: <strong>${submissionDate}</strong></span>
+                        </div>
+                    `;
+                } else if (type === 'cadangan') {
+                    content = `
+                        <h3>Cadangan Daripada ${data.studentName}</h3>
+                        <p>"${data.text}"</p>
+                        <div class="meta">
+                            <span>&nbsp;</span>
+                            <span>Tarikh: <strong>${submissionDate}</strong></span>
+                        </div>
+                    `;
+                } else if (type === 'temujanji') {
+                    content = `
+                        <h3>Temujanji: <strong style="color: var(--primary-text);">${data.status || 'Pending'}</strong></h3>
+                        <p>Pelajar: <strong>${data.studentName}</strong></p>
+                        <p>Tarikh: <strong>${data.appointmentDate}</strong></p>
+                        <p>Masa: <strong>${data.appointmentTime}</strong></p>
+                        <div class="meta">
+                            <span>&nbsp;</span>
+                            <span>Dihantar pada: <strong>${submissionDate}</strong></span>
+                        </div>
+                    `;
+                }
+                card.innerHTML = content;
+                listElement.appendChild(card);
+            });
+        }
+
+        // Fungsi untuk mengambil data dari Firestore
+        async function fetchData(collectionName, schoolKey, listElement, type) {
+            try {
+                const querySnapshot = await db.collection(collectionName)
+                    .where('schoolKey', '==', schoolKey) // Guna schoolKey untuk query yang tepat
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                displayItems(listElement, querySnapshot.docs, type);
+            } catch (error) {
+                console.error(`Ralat memuatkan ${type}:`, error);
+                listElement.innerHTML = `<p class="no-data">Gagal memuatkan data. Sila cuba lagi.</p>`;
+            }
+        }
+
+        // Main script
+        document.addEventListener('DOMContentLoaded', () => {
+            // Semak jika ada data guru dalam localStorage. Fungsi ini diandaikan dari auth.js
+            const currentGuru = getCurrentGuru(); 
+            if (!currentGuru) {
+                // Jika tiada data guru, pengguna mungkin tidak log masuk.
+                // Arahkan kembali ke halaman log masuk (index.html).
+                window.location.href = 'index.html';
+                return; // Hentikan pelaksanaan skrip selanjutnya
+            }
+
+            // Paparkan maklumat guru di header
+            document.getElementById('guru-name').textContent = `Selamat Datang, ${currentGuru.name}`;
+            document.getElementById('guru-school').textContent = currentGuru.school;
+
+            // Ambil data untuk tab pertama (Aduan)
+            const aduanList = document.getElementById('aduan-list');
+            fetchData('complaints', currentGuru.schoolKey, aduanList, 'aduan');
+
+            // Logik untuk Tab
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const targetTab = tab.getAttribute('data-tab');
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === targetTab) {
+                            content.classList.add('active');
+                        }
+                    });
+
+                    // Muatkan data hanya apabila tab diklik
+                    if (targetTab === 'cadangan') {
+                        const cadanganList = document.getElementById('cadangan-list');
+                        if (cadanganList.children.length <= 1) { // Muat jika belum dimuatkan
+                           fetchData('suggestions', currentGuru.schoolKey, cadanganList, 'cadangan');
+                        }
+                    } else if (targetTab === 'temujanji') {
+                        const temujanjiList = document.getElementById('temujanji-list');
+                        if (temujanjiList.children.length <= 1) { // Muat jika belum dimuatkan
+                           fetchData('appointments', currentGuru.schoolKey, temujanjiList, 'temujanji');
+                        }
+                    }
+                });
+            });
+
+            // Logik Log Keluar
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('Anda pasti ingin log keluar?')) {
+                    // Log keluar dari Firebase, kosongkan localStorage, dan arahkan ke halaman log masuk
+                    firebase.auth().signOut().then(() => {
+                        localStorage.removeItem('sars_currentGuru');
+                        window.location.href = 'index.html'; // Pastikan ia mengarah ke halaman log masuk yang betul
+                    }).catch((error) => {
+                        console.error("Ralat log keluar: ", error);
+                        alert('Log keluar gagal. Sila cuba lagi.');
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

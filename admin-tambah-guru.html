@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin: Tambah Guru Baru</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #37474f; /* Latar belakang gelap untuk admin */
+            color: #eceff1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .admin-container {
+            background-color: #546e7a;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+        h1 {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        p {
+            color: #cfd8dc;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b0bec5;
+        }
+        .input-group input {
+            background-color: #37474f;
+            border: 2px solid #78909c;
+            color: #eceff1;
+            padding: 12px 15px 12px 45px;
+            width: 100%;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+        }
+        .input-group input::placeholder {
+            color: #90a4ae;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #1e88e5;
+        }
+        button {
+            border-radius: 8px;
+            border: none;
+            background-color: #1e88e5;
+            color: #FFFFFF;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 14px 45px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: background-color 0.3s, transform 0.2s;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #1565c0;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background-color: #90a4ae;
+            cursor: not-allowed;
+        }
+
+        /* Gaya untuk senarai guru sedia ada */
+        .teacher-list-container {
+            margin-top: 30px;
+            text-align: left;
+            background-color: #37474f;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #78909c;
+        }
+        .teacher-list-container h3 {
+            margin-top: 0;
+            color: #eceff1;
+            border-bottom: 1px solid #78909c;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .teacher-list-container ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .teacher-list-container li {
+            padding: 8px 0;
+            color: #cfd8dc;
+            display: flex; /* Guna flexbox untuk penjajaran */
+            justify-content: space-between; /* Jarakkan nama dan ikon */
+            align-items: center; /* Jajarkan item secara menegak */
+        }
+        .delete-teacher-btn {
+            color: #ef9a9a; /* Merah pudar */
+            cursor: pointer;
+            transition: color 0.2s;
+            margin-left: 15px; /* Jarak dari nama */
+        }
+        .delete-teacher-btn:hover {
+            color: #f44336; /* Merah terang apabila dilayang */
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <form id="addTeacherForm">
+            <h1><i class="fas fa-user-shield"></i> Panel Pentadbir</h1>
+            <p>Gunakan borang ini untuk mendaftar guru baru ke dalam sistem.</p>
+            <div class="input-group">
+                <i class="fas fa-user-tie"></i>
+                <input type="text" id="guruName" placeholder="Nama Penuh Guru" required />
+            </div>
+            <div class="input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="guruEmail" placeholder="E-mel Guru (cth: ahmad@gmail.com)" required />
+            </div>
+            <div class="input-group">
+                <i class="fas fa-school"></i>
+                <input type="text" id="guruSchool" placeholder="Nama Sekolah (e.g., SMJK SHAN TAO)" required />
+            </div>
+            <div class="input-group">
+                <i class="fas fa-key"></i>
+                <input type="password" id="guruPassword" placeholder="Kata Laluan (min. 6 aksara)" required /> 
+            </div>
+            <button type="submit">Daftar Guru</button>
+        </form>
+
+        <!-- Bahagian untuk memaparkan senarai guru sedia ada -->
+        <div id="teacherListContainer" class="teacher-list-container" style="display: none;">
+            <h3 id="teacherListHeader"></h3>
+            <ul id="teacherList"></ul>
+        </div>
+        
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <!-- Skrip Konfigurasi Berpusat -->
+    <script src="assets/js/auth.js"></script>
+
+    <script>
+        const schoolInput = document.getElementById('guruSchool');
+        const teacherListContainer = document.getElementById('teacherListContainer');
+        const teacherListHeader = document.getElementById('teacherListHeader');
+        const teacherList = document.getElementById('teacherList');
+
+        // Fungsi untuk memaparkan guru dari sekolah tertentu
+        async function displayTeachersForSchool(schoolName) {
+            teacherListContainer.style.display = 'none';
+            teacherList.innerHTML = '';
+
+            if (!schoolName) return;
+
+            const schoolKey = schoolName.trim().replace(/\s+/g, '-').toLowerCase();
+
+            try {
+                // Logik baru: Cari dalam koleksi 'teachers' utama
+                const teachersQuery = await db.collection('teachers')
+                    .where('schoolKey', '==', schoolKey) // Guna schoolKey untuk query yang konsisten
+                    .orderBy('name')
+                    .get();
+
+                if (teachersQuery.empty) {
+                    teacherListHeader.textContent = `Guru di ${schoolName.trim()}`;
+                    teacherList.innerHTML = '<li>Tiada guru didaftarkan lagi untuk sekolah ini.</li>';
+                } else {
+                    teacherListHeader.textContent = `Guru Sedia Ada di ${schoolName.trim()}:`;
+                    teachersQuery.forEach(doc => {
+                        const teacherName = doc.data().name;
+                        const teacherId = doc.id; // Ini ialah UID
+                        teacherList.innerHTML += `
+                            <li>
+                                <span><i class="fas fa-user-check" style="margin-right: 8px; color: #4caf50;"></i>${teacherName}</span>
+                                <i class="fas fa-trash-alt delete-teacher-btn" data-uid="${teacherId}" data-name="${teacherName}" title="Padam Guru Ini"></i>
+                            </li>`;
+                    });
+                }
+                teacherListContainer.style.display = 'block';
+            } catch (error) {
+                console.error("Ralat memaparkan senarai guru:", error);
+            }
+        }
+
+        // Fungsi untuk memadam guru
+        async function deleteTeacher(uid, name) {
+            if (!confirm(`Anda pasti ingin memadam akaun guru "${name}"? Tindakan ini tidak boleh diundur.`)) {
+                return;
+            }
+
+            // AMARAN KESELAMATAN PENTING:
+            // Kod ini hanya memadam rekod guru dari pangkalan data Firestore.
+            // Ia TIDAK memadam akaun pengesahan (Authentication) pengguna.
+            // Pengguna itu masih wujud dalam Firebase Auth tetapi tidak boleh log masuk ke aplikasi
+            // kerana semakan di halaman log masuk akan gagal.
+            //
+            // Untuk pemadaman sepenuhnya, anda MESTI menggunakan Firebase Cloud Function
+            // dengan Admin SDK untuk memadam pengguna dari Firebase Authentication.
+
+            try {
+                // Padam dokumen guru dari koleksi 'teachers'
+                await db.collection('teachers').doc(uid).delete();
+
+                alert(`Akaun untuk "${name}" telah berjaya dipadam dari senarai.`);
+                
+                // Muat semula senarai guru untuk sekolah semasa
+                const schoolName = document.getElementById('guruSchool').value.trim();
+                await displayTeachersForSchool(schoolName);
+
+            } catch (error) {
+                console.error("Ralat memadam guru:", error);
+                alert("Gagal memadam guru. Sila lihat konsol untuk butiran.");
+            }
+        }
+
+        document.getElementById('addTeacherForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const submitButton = document.querySelector('button[type="submit"]');
+            const name = document.getElementById('guruName').value.trim();
+            const email = document.getElementById('guruEmail').value.trim();
+            const school = document.getElementById('guruSchool').value.trim();
+            const password = document.getElementById('guruPassword').value.trim();
+
+            if (!name || !email || !school || !password) {
+                alert('Sila isi semua maklumat (Nama, E-mel, Sekolah, Kata Laluan).');
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Memproses...';
+
+            try {
+                // AMARAN: Mencipta pengguna dari sisi klien seperti ini memerlukan peraturan keselamatan Firebase
+                // yang longgar. Untuk produksi sebenar, gunakan Cloud Function.
+                // Untuk projek ini, kita teruskan.
+
+                // Langkah 1: Cipta pengguna dalam Firebase Authentication
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                const schoolKey = school.trim().replace(/\s+/g, '-').toLowerCase();
+                // Langkah 2: Simpan maklumat guru dalam koleksi 'teachers' utama
+                // Gunakan UID dari Auth sebagai ID dokumen untuk pautan yang selamat
+                await db.collection('teachers').doc(user.uid).set({
+                    name: name,
+                    email: email,
+                    school: school,
+                    schoolKey: schoolKey, // Kunci unik untuk query
+                    role: 'teacher', // Tambah peranan untuk rujukan masa depan
+                    createdAt: new Date().toISOString()
+                });
+
+                // (Pilihan) Pastikan sekolah wujud dalam koleksi 'schools' menggunakan schoolKey
+                const schoolRef = db.collection('schools').doc(schoolKey);
+                const schoolDoc = await schoolRef.get();
+                if (!schoolDoc.exists) {
+                    await schoolRef.set({
+                        name: school,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                // Log keluar admin secara automatik untuk mengelakkan konflik sesi
+                await firebase.auth().signOut();
+
+                alert(`Akaun guru "${name}" telah berjaya dicipta.`);
+                
+                document.getElementById('addTeacherForm').reset(); // Kosongkan borang
+                await displayTeachersForSchool(school); // Muat semula senarai guru
+
+            } catch (error) {
+                console.error("Ralat mendaftar guru: ", error);
+                let errorMessage = "Pendaftaran guru gagal. Sila cuba lagi.";
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'Pendaftaran gagal: Alamat e-mel ini telah digunakan oleh akaun lain.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Pendaftaran gagal: Format alamat e-mel tidak sah.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = 'Pendaftaran gagal: Kata laluan terlalu lemah. Sila gunakan sekurang-kurangnya 6 aksara.';
+                        break;
+                    default:
+                        errorMessage = "Pendaftaran guru gagal. Sila lihat konsol untuk butiran teknikal.";
+                        break;
+                }
+                alert(errorMessage);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Daftar Guru';
+            }
+        });
+
+        // Event listener untuk menyemak sekolah apabila pengguna selesai menaip
+        schoolInput.addEventListener('blur', (event) => {
+            displayTeachersForSchool(event.target.value.trim());
+        });
+
+        // Event listener untuk butang padam (menggunakan event delegation)
+        teacherList.addEventListener('click', (event) => {
+            if (event.target.classList.contains('delete-teacher-btn')) {
+                const uid = event.target.dataset.uid;
+                const name = event.target.dataset.name;
+                deleteTeacher(uid, name);
+            }
+        });
+    </script>
+</body>
+</html>
